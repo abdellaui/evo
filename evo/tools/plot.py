@@ -332,9 +332,9 @@ def traj(ax, plot_mode, traj, style='-', color='black', label="", alpha=1.0):
         if SETTINGS.plot_xyz_realistic:
             set_aspect_equal_3d(ax)
     else:
-        ax.plot(x, y, style, color=color, label=label, alpha=alpha)
-    if label:
-        ax.legend(frameon=True)
+        ax.plot(x, y, style, markersize=1, color=color, label=label, alpha=alpha)
+    #if label:
+        #ax.legend(frameon=True)
 
 
 def colored_line_collection(xyz, colors, plot_mode=PlotMode.xy,
@@ -371,20 +371,27 @@ def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title=""):
     :param title: plot title
     """
     pos = traj.positions_xyz
+    x_idx, y_idx, z_idx = plot_mode_to_idx(plot_mode)
+    
     norm = mpl.colors.Normalize(vmin=min_map, vmax=max_map, clip=True)
     mapper = cm.ScalarMappable(
         norm=norm,
         cmap=SETTINGS.plot_trajectory_cmap)  # cm.*_r is reversed cmap
     mapper.set_array(array)
     colors = [mapper.to_rgba(a) for a in array]
-    line_collection = colored_line_collection(pos, colors, plot_mode)
-    ax.add_collection(line_collection)
+
     if plot_mode == PlotMode.xyz:
+        line_collection = colored_line_collection(pos, colors, plot_mode)
+        ax.add_collection(line_collection)
         ax.set_zlim(
             np.amin(traj.positions_xyz[:, 2]),
             np.amax(traj.positions_xyz[:, 2]))
         if SETTINGS.plot_xyz_realistic:
             set_aspect_equal_3d(ax)
+    else:
+        x = pos[:, x_idx]
+        y = pos[:, y_idx]
+        ax.scatter(x,y,c=colors, s=5)
     fig = plt.gcf()
     cbar = fig.colorbar(
         mapper, ticks=[min_map, (max_map - (max_map - min_map) / 2), max_map])
@@ -394,7 +401,7 @@ def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title=""):
         "{0:0.3f}".format(max_map)
     ])
     if title:
-        ax.legend(frameon=True)
+        #ax.legend(frameon=True)
         plt.title(title)
 
 
@@ -418,13 +425,13 @@ def traj_xyz(axarr, traj, style='-', color='black', label="", alpha=1.0,
     if isinstance(traj, trajectory.PoseTrajectory3D):
         x = traj.timestamps - (traj.timestamps[0]
                                if start_timestamp is None else start_timestamp)
-        xlabel = "$t$ (s)"
+        xlabel = "index of .."
     else:
         x = range(0, len(traj.positions_xyz))
         xlabel = "index"
     ylabels = ["$x$ (m)", "$y$ (m)", "$z$ (m)"]
     for i in range(0, 3):
-        axarr[i].plot(x, traj.positions_xyz[:, i], style, color=color,
+        axarr[i].plot(x, traj.positions_xyz[:, i], style, color=color, linewidth=0.5,
                       label=label, alpha=alpha)
         axarr[i].set_ylabel(ylabels[i])
     axarr[2].set_xlabel(xlabel)
@@ -453,13 +460,13 @@ def traj_rpy(axarr, traj, style='-', color='black', label="", alpha=1.0,
     if isinstance(traj, trajectory.PoseTrajectory3D):
         x = traj.timestamps - (traj.timestamps[0]
                                if start_timestamp is None else start_timestamp)
-        xlabel = "$t$ (s)"
+        xlabel = "index of ..."
     else:
         x = range(0, len(angles))
         xlabel = "index"
     ylabels = ["$roll$ (deg)", "$pitch$ (deg)", "$yaw$ (deg)"]
     for i in range(0, 3):
-        axarr[i].plot(x, np.rad2deg(angles[:, i]), style, color=color,
+        axarr[i].plot(x, np.rad2deg(angles[:, i]), style, color=color, linewidth=0.5,
                       label=label, alpha=alpha)
         axarr[i].set_ylabel(ylabels[i])
     axarr[2].set_xlabel(xlabel)
