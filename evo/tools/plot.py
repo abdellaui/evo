@@ -43,6 +43,7 @@ import seaborn as sns
 from evo import EvoException
 from evo.tools import user
 from evo.core import trajectory
+import math
 
 # configure matplotlib and seaborn according to package settings
 # TODO: 'color_codes=False' to work around this bug:
@@ -358,7 +359,7 @@ def colored_line_collection(xyz, colors, plot_mode=PlotMode.xy,
     return line_collection
 
 
-def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title=""):
+def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title="", is_rotation=False):
     """
     color map a path/trajectory in xyz coordinates according to
     an array of values
@@ -399,10 +400,12 @@ def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title=""):
     fig = plt.gcf()
     cbar = fig.colorbar(
         mapper, ticks=[min_map, (max_map - (max_map - min_map) / 2), max_map])
+
+    unit = "°" if is_rotation else "m"  
     cbar.ax.set_yticklabels([
-        "{0:0.3f}".format(min_map),
-        "{0:0.3f}".format(max_map - (max_map - min_map) / 2),
-        "{0:0.3f}".format(max_map)
+        "{0:0.3f}{1}".format(min_map, unit),
+        "{0:0.3f}{1}".format(max_map - (max_map - min_map) / 2, unit),
+        "{0:0.3f}{1}".format(max_map, unit)
     ])
     if title:
         #ax.legend(frameon=True)
