@@ -379,18 +379,22 @@ def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title=""):
         cmap=SETTINGS.plot_trajectory_cmap)  # cm.*_r is reversed cmap
     mapper.set_array(array)
     colors = [mapper.to_rgba(a) for a in array]
-
+    x = pos[:, x_idx]
+    y = pos[:, y_idx]
+    z = pos[:, z_idx]
     if plot_mode == PlotMode.xyz:
+        ax.scatter(x,y, z, c=colors, s=5)
+        """
         line_collection = colored_line_collection(pos, colors, plot_mode)
         ax.add_collection(line_collection)
+        """
         ax.set_zlim(
-            np.amin(traj.positions_xyz[:, 2]),
-            np.amax(traj.positions_xyz[:, 2]))
+            np.amin(z),
+            np.amax(z))
         if SETTINGS.plot_xyz_realistic:
-            set_aspect_equal_3d(ax)
+            #set_aspect_equal_3d(ax)
+            pass
     else:
-        x = pos[:, x_idx]
-        y = pos[:, y_idx]
         ax.scatter(x,y,c=colors, s=5)
     fig = plt.gcf()
     cbar = fig.colorbar(
