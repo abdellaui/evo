@@ -26,10 +26,8 @@ import logging
 import pickle
 import collections
 from enum import Enum
-
 import matplotlib as mpl
 from evo.tools.settings import SETTINGS
-
 mpl.use(SETTINGS.plot_backend)
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -263,26 +261,26 @@ def prepare_axis(fig, plot_mode=PlotMode.xy, subplot_arg="111"):
     :return: the matplotlib axis
     """
     if plot_mode == PlotMode.xyz:
-        ax = fig.add_subplot(subplot_arg, projection="3d")
+        ax = fig.add_subplot(subplot_arg, projection="3d", proj_type="ortho")
     else:
         ax = fig.add_subplot(subplot_arg)
         ax.axis("equal")
     if plot_mode in {PlotMode.xy, PlotMode.xz, PlotMode.xyz}:
-        xlabel = "$x$ (m)"
+        xlabel = "$X$ in Metern"
     elif plot_mode in {PlotMode.yz, PlotMode.yx}:
-        xlabel = "$y$ (m)"
+        xlabel = "$Y$ in Metern"
     else:
-        xlabel = "$z$ (m)"
+        xlabel = "$Z$ in Metern"
     if plot_mode in {PlotMode.xy, PlotMode.zy, PlotMode.xyz}:
-        ylabel = "$y$ (m)"
+        ylabel = "$Y$ in Metern"
     elif plot_mode in {PlotMode.zx, PlotMode.yx}:
-        ylabel = "$x$ (m)"
+        ylabel = "$X$ in Metern"
     else:
-        ylabel = "$z$ (m)"
+        ylabel = "$Z$ in Metern"
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     if plot_mode == PlotMode.xyz:
-        ax.set_zlabel('$z$ (m)')
+        ax.set_zlabel('$Z$ in Metern')
     if SETTINGS.plot_invert_xaxis:
         plt.gca().invert_xaxis()
     if SETTINGS.plot_invert_yaxis:
@@ -313,7 +311,7 @@ def plot_mode_to_idx(plot_mode):
     return x_idx, y_idx, z_idx
 
 
-def traj(ax, plot_mode, traj, style='-', color='black', label="", alpha=1.0):
+def traj(ax, plot_mode, traj, style='-', color='black', label="", alpha=0.9):
     """
     plot a path/trajectory based on xyz coordinates into an axis
     :param ax: the matplotlib axis
@@ -329,13 +327,13 @@ def traj(ax, plot_mode, traj, style='-', color='black', label="", alpha=1.0):
     y = traj.positions_xyz[:, y_idx]
     if plot_mode == PlotMode.xyz:
         z = traj.positions_xyz[:, z_idx]
-        ax.plot(x, y, z, style, color=color, label=label, alpha=alpha)
+        ax.plot(x, y, z, style, color=color, markersize=1, label=label, alpha=alpha)
         if SETTINGS.plot_xyz_realistic:
             set_aspect_equal_3d(ax)
     else:
         ax.plot(x, y, style, markersize=1, color=color, label=label, alpha=alpha)
-    #if label:
-        #ax.legend(frameon=True)
+    if label:
+        ax.legend(frameon=True)
 
 
 def colored_line_collection(xyz, colors, plot_mode=PlotMode.xy,
@@ -384,7 +382,7 @@ def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title="", is_rot
     y = pos[:, y_idx]
     z = pos[:, z_idx]
     if plot_mode == PlotMode.xyz:
-        ax.scatter(x,y, z, c=colors, s=5)
+        ax.scatter(x,y, z, c=colors, s=5, zorder=100)
         """
         line_collection = colored_line_collection(pos, colors, plot_mode)
         ax.add_collection(line_collection)
@@ -392,21 +390,24 @@ def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title="", is_rot
         ax.set_zlim(
             np.amin(z),
             np.amax(z))
+        ax.view_init(15, -75)
         if SETTINGS.plot_xyz_realistic:
-            #set_aspect_equal_3d(ax)
+            set_aspect_equal_3d(ax)
             pass
     else:
-        ax.scatter(x,y,c=colors, s=5)
+        ax.scatter(x,y,c=colors, s=5, zorder=100)
     fig = plt.gcf()
     cbar = fig.colorbar(
         mapper, ticks=[min_map, (max_map - (max_map - min_map) / 2), max_map])
 
-    unit = "°" if is_rotation else "m"  
+    unit = "Grad" if is_rotation else "Metern"  
+    unit_txt = "Orientierungs" if is_rotation else "Positions"
     cbar.ax.set_yticklabels([
-        "{0:0.3f}{1}".format(min_map, unit),
-        "{0:0.3f}{1}".format(max_map - (max_map - min_map) / 2, unit),
-        "{0:0.3f}{1}".format(max_map, unit)
+        "{}".format(int(math.floor(min_map))),
+        "{}".format(int(max_map - (max_map - min_map) / 2)),
+        "{}".format(int(math.ceil(max_map)))
     ])
+    cbar.ax.set_ylabel("{}fehler in {}".format(unit_txt, unit))
     if title:
         #ax.legend(frameon=True)
         plt.title(title)
@@ -436,7 +437,7 @@ def traj_xyz(axarr, traj, style='-', color='black', label="", alpha=1.0,
     else:
         x = range(0, len(traj.positions_xyz))
         xlabel = "index"
-    ylabels = ["$x$ (m)", "$y$ (m)", "$z$ (m)"]
+    ylabels = ["$X$ in Metern", "$Y$ in Metern", "$Z$ in Metern"]
     for i in range(0, 3):
         axarr[i].plot(x, traj.positions_xyz[:, i], style, color=color, linewidth=0.5,
                       label=label, alpha=alpha)
