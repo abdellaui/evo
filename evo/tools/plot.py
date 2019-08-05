@@ -264,7 +264,7 @@ def prepare_axis(fig, plot_mode=PlotMode.xy, subplot_arg="111"):
         ax = fig.add_subplot(subplot_arg, projection="3d", proj_type="ortho")
     else:
         ax = fig.add_subplot(subplot_arg)
-        ax.axis("equal")
+        #ax.set_aspect('equal', 'box')
     if plot_mode in {PlotMode.xy, PlotMode.xz, PlotMode.xyz}:
         xlabel = "$X$ in Metern"
     elif plot_mode in {PlotMode.yz, PlotMode.yx}:
@@ -277,9 +277,12 @@ def prepare_axis(fig, plot_mode=PlotMode.xy, subplot_arg="111"):
         ylabel = "$X$ in Metern"
     else:
         ylabel = "$Z$ in Metern"
+    ax.axis('equal')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     if plot_mode == PlotMode.xyz:
+        ax.set_ylabel(ylabel, labelpad=5)
+        ax.set_xlabel(xlabel, labelpad=15)
         ax.set_zlabel('$Z$ in Metern')
     if SETTINGS.plot_invert_xaxis:
         plt.gca().invert_xaxis()
@@ -325,15 +328,19 @@ def traj(ax, plot_mode, traj, style='-', color='black', label="", alpha=0.9):
     x_idx, y_idx, z_idx = plot_mode_to_idx(plot_mode)
     x = traj.positions_xyz[:, x_idx]
     y = traj.positions_xyz[:, y_idx]
+
+    zorder= 1 if color == 'gray' else 2
+
     if plot_mode == PlotMode.xyz:
         z = traj.positions_xyz[:, z_idx]
-        ax.plot(x, y, z, style, color=color, markersize=1, label=label, alpha=alpha)
+        ax.plot(x, y, z, style, color=color, markersize=1, label=label, alpha=alpha, zorder=zorder)
         if SETTINGS.plot_xyz_realistic:
             set_aspect_equal_3d(ax)
     else:
-        ax.plot(x, y, style, markersize=1, color=color, label=label, alpha=alpha)
+        ax.plot(x, y, style, markersize=1, color=color, label=label, alpha=alpha, zorder=zorder)
     if label:
-        ax.legend(frameon=True)
+        ax.legend(frameon=True, loc='upper left')
+
 
 
 def colored_line_collection(xyz, colors, plot_mode=PlotMode.xy,
@@ -382,7 +389,7 @@ def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title="", is_rot
     y = pos[:, y_idx]
     z = pos[:, z_idx]
     if plot_mode == PlotMode.xyz:
-        ax.scatter(x,y, z, c=colors, s=5, zorder=100)
+        ax.scatter(x,y, z, c=colors, s=5, zorder=3)
         """
         line_collection = colored_line_collection(pos, colors, plot_mode)
         ax.add_collection(line_collection)
@@ -395,7 +402,7 @@ def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title="", is_rot
             set_aspect_equal_3d(ax)
             pass
     else:
-        ax.scatter(x,y,c=colors, s=5, zorder=100)
+        ax.scatter(x,y,c=colors, s=5, zorder=3)
     fig = plt.gcf()
     cbar = fig.colorbar(
         mapper, ticks=[min_map, (max_map - (max_map - min_map) / 2), max_map])
@@ -409,7 +416,7 @@ def traj_colormap(ax, traj, array, plot_mode, min_map, max_map, title="", is_rot
     ])
     cbar.ax.set_ylabel("{}fehler in {}".format(unit_txt, unit))
     if title:
-        #ax.legend(frameon=True)
+        ax.legend(frameon=True, loc='upper left')
         plt.title(title)
 
 
@@ -444,7 +451,7 @@ def traj_xyz(axarr, traj, style='-', color='black', label="", alpha=1.0,
         axarr[i].set_ylabel(ylabels[i])
     axarr[2].set_xlabel(xlabel)
     if label:
-        axarr[0].legend(frameon=True)
+        axarr[0].legend(frameon=True, loc='upper left')
 
 
 def traj_rpy(axarr, traj, style='-', color='black', label="", alpha=1.0,
@@ -479,7 +486,7 @@ def traj_rpy(axarr, traj, style='-', color='black', label="", alpha=1.0,
         axarr[i].set_ylabel(ylabels[i])
     axarr[2].set_xlabel(xlabel)
     if label:
-        axarr[0].legend(frameon=True)
+        axarr[0].legend(frameon=True, loc='upper left')
 
 
 def trajectories(fig, trajectories, plot_mode=PlotMode.xy, title="",
@@ -572,5 +579,5 @@ def error_array(fig, err_array, x_array=None, statistics=None, threshold=None,
     plt.ylabel(ylabel if ylabel else name)
     plt.xlabel(xlabel)
     plt.title(title)
-    plt.legend(frameon=True)
+    plt.legend(frameon=True, loc='upper left')
     return fig
